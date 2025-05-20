@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BlueSky Intent Compose</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     /* Global Styles */
     body {
-      background: #f0f2f5; /* A light, neutral background */
+      background: #f0f2f5; /* A light neutral background */
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 20px;
@@ -17,8 +17,8 @@
       justify-content: center;
       height: 100vh;
     }
-  
-    /* Container styling to replicate BlueSky's clean, floating card */
+    
+    /* Container styling */
     #container {
       background: #fff;
       border-radius: 16px;
@@ -27,18 +27,17 @@
       width: 100%;
       padding: 24px 28px;
     }
-  
-    /* Optional header – adjust or remove if the image shows no header */
+    
+    /* Header styling */
     h2 {
       text-align: center;
-      margin-top: 0;
-      margin-bottom: 16px;
+      margin: 0 0 16px;
       font-weight: 500;
       font-size: 20px;
       color: #333;
     }
-  
-    /* Textarea styling that mimics BlueSky's compose field */
+    
+    /* Textarea styling */
     textarea {
       width: 100%;
       height: 140px;
@@ -50,13 +49,14 @@
       transition: border-color 0.2s ease;
       outline: none;
       background: #fff;
+      color: #333;
     }
     textarea:focus {
       border-color: #1da1f2;
       box-shadow: 0 0 0 1px #1da1f2;
     }
-  
-    /* Character counter – it appears as a subtle hint in the bottom-right */
+    
+    /* Character counter */
     #charCount {
       text-align: right;
       margin-top: 8px;
@@ -66,8 +66,8 @@
     .limit-exceeded {
       color: #e0245e;
     }
-  
-    /* Button group styling – buttons laid out side by side */
+    
+    /* Button group styling */
     .button-group {
       display: flex;
       gap: 12px;
@@ -82,8 +82,8 @@
       cursor: pointer;
       transition: background 0.3s ease, box-shadow 0.3s ease;
     }
-  
-    /* Compose Button: Bold blue background */
+    
+    /* Compose Button */
     #composeButton {
       background: #1da1f2;
       color: #fff;
@@ -92,8 +92,8 @@
       background: #0d93e3;
       box-shadow: 0 2px 8px rgba(29, 161, 242, 0.4);
     }
-  
-    /* Copy Link Button: Outline style to contrast the primary button */
+    
+    /* Copy Link Button */
     #copyLinkButton {
       background: #fff;
       color: #1da1f2;
@@ -103,8 +103,77 @@
       background: #e8f4ff;
       box-shadow: 0 2px 8px rgba(29, 161, 242, 0.25);
     }
-  
-    /* Confirmation message that appears when the link is copied */
+    
+    /* Emoji Picker Button */
+    #emojiButton {
+      background: #fff;
+      color: #1da1f2;
+      border: 1px solid #1da1f2;
+    }
+    #emojiButton:hover {
+      background: #e8f4ff;
+      box-shadow: 0 2px 8px rgba(29, 161, 242, 0.25);
+    }
+    
+    /* Emoji Picker Container */
+    #emojiPicker {
+      margin-top: 12px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      display: none;
+    }
+    /* Search styles */
+    #emojiSearch {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      outline: none;
+    }
+    #emojiSearch:focus {
+      border-color: #1da1f2;
+      box-shadow: 0 0 0 1px #1da1f2;
+    }
+    
+    /* Emoji Grid */
+    #emojiGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+      gap: 6px;
+    }
+    .emojiItem {
+      cursor: pointer;
+      font-size: 24px;
+      padding: 4px;
+      text-align: center;
+    }
+    .emojiItem:hover {
+      background-color: #f0f2f5;
+      border-radius: 4px;
+    }
+    
+    /* Load More Button */
+    #loadMoreButton {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 0;
+      background: #fff;
+      color: #1da1f2;
+      border: 1px solid #1da1f2;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #loadMoreButton:hover {
+      background: #e8f4ff;
+    }
+    
+    /* Copy confirmation message */
     #copyMessage {
       text-align: center;
       font-size: 14px;
@@ -124,31 +193,35 @@
       <div class="button-group">
         <button type="submit" id="composeButton">Post</button>
         <button type="button" id="copyLinkButton">Copy Link</button>
+        <button type="button" id="emojiButton">Emoji Picker</button>
+      </div>
+      <!-- Emoji Picker -->
+      <div id="emojiPicker">
+        <input type="text" id="emojiSearch" placeholder="Search emojis..." />
+        <div id="emojiGrid"></div>
+        <button type="button" id="loadMoreButton">Load More</button>
       </div>
     </form>
     <div id="copyMessage">Link copied!</div>
   </div>
   
   <script>
-    // Live character counter update
+    /* ------------------ Textarea & Compose Functions ------------------ */
     const textarea = document.getElementById("postContent");
     const charCount = document.getElementById("charCount");
-
+    
     textarea.addEventListener("input", () => {
       const len = textarea.value.length;
       charCount.textContent = `${len}/300`;
       if (len > 300) {
         charCount.classList.add("limit-exceeded");
+        textarea.style.color = "red";
       } else {
         charCount.classList.remove("limit-exceeded");
+        textarea.style.color = "#333";
       }
     });
-
-    /**
-     * Creates a BlueSky intent link based on device type.
-     * Mobile devices use the deep link "bluesky://intent/compose"
-     * Desktop browsers use the web endpoint "https://bsky.app/intent/compose"
-     */
+    
     function getIntentLink() {
       const content = textarea.value;
       const isMobile = /Mobi|Android/i.test(navigator.userAgent);
@@ -156,8 +229,7 @@
         ? "bluesky://intent/compose?text=" + encodeURIComponent(content)
         : "https://bsky.app/intent/compose?text=" + encodeURIComponent(content);
     }
-
-    // Handle Compose action
+    
     document.getElementById("composeForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const content = textarea.value.trim();
@@ -171,14 +243,12 @@
       }
       const intentUrl = getIntentLink();
       window.location.href = intentUrl;
-      
-      // Fallback alert if BlueSky isn't opened
+    
       setTimeout(() => {
         alert("If the BlueSky app did not open, please ensure it is installed on your device.");
       }, 1000);
     });
-
-    // Copy Link button functionality
+    
     document.getElementById("copyLinkButton").addEventListener("click", function() {
       const intentUrl = getIntentLink();
       if (!navigator.clipboard) {
@@ -193,6 +263,197 @@
         }, () => {
           alert("Failed to copy link. Please try again.");
         });
+      }
+    });
+    
+    /* ------------------ Emoji Picker Functions ------------------ */
+    const emojiButton = document.getElementById("emojiButton");
+    const emojiPicker = document.getElementById("emojiPicker");
+    const emojiSearch = document.getElementById("emojiSearch");
+    const emojiGrid = document.getElementById("emojiGrid");
+    const loadMoreButton = document.getElementById("loadMoreButton");
+    
+    // Full list of emoji objects (each with emoji and a name)
+    const fullEmojiList = [
+      {emoji: "😀", name: "grinning face"},
+      {emoji: "😃", name: "smiley face"},
+      {emoji: "😄", name: "smile"},
+      {emoji: "😁", name: "beaming face"},
+      {emoji: "😆", name: "laughing"},
+      {emoji: "😅", name: "sweat smile"},
+      {emoji: "😂", name: "tears of joy"},
+      {emoji: "🤣", name: "rolling on the floor laughing"},
+      {emoji: "😊", name: "blushing"},
+      {emoji: "😇", name: "smiling face with halo"},
+      {emoji: "🙂", name: "slight smile"},
+      {emoji: "🙃", name: "upside down"},
+      {emoji: "😉", name: "winking"},
+      {emoji: "😌", name: "relieved"},
+      {emoji: "😍", name: "heart eyes"},
+      {emoji: "🥰", name: "smiling with hearts"},
+      {emoji: "😘", name: "face blowing a kiss"},
+      {emoji: "😗", name: "kissing"},
+      {emoji: "😙", name: "kissing smiling eyes"},
+      {emoji: "😚", name: "kissing closed eyes"},
+      {emoji: "😋", name: "yum"},
+      {emoji: "😛", name: "stuck out tongue"},
+      {emoji: "😝", name: "squinting tongue"},
+      {emoji: "😜", name: "winking tongue"},
+      {emoji: "🤪", name: "zany"},
+      {emoji: "🤨", name: "raised eyebrow"},
+      {emoji: "🧐", name: "monocle"},
+      {emoji: "🤓", name: "nerd"},
+      {emoji: "😎", name: "sunglasses"},
+      {emoji: "🥸", name: "disguised"},
+      {emoji: "🤩", name: "starstruck"},
+      {emoji: "🥳", name: "party"},
+      {emoji: "😏", name: "smirk"},
+      {emoji: "😒", name: "unamused"},
+      {emoji: "😞", name: "disappointed"},
+      {emoji: "😔", name: "pensive"},
+      {emoji: "😟", name: "worried"},
+      {emoji: "😕", name: "confused"},
+      {emoji: "🙁", name: "slightly frowning"},
+      {emoji: "☹️", name: "frowning face"},
+      {emoji: "😣", name: "persevering"},
+      {emoji: "😖", name: "confounded"},
+      {emoji: "😫", name: "tired face"},
+      {emoji: "😩", name: "weary"},
+      {emoji: "🥺", name: "pleading"},
+      {emoji: "😢", name: "crying"},
+      {emoji: "😭", name: "sobbing"},
+      {emoji: "😤", name: "triumph"},
+      {emoji: "😠", name: "angry"},
+      {emoji: "😡", name: "pouting"},
+      {emoji: "🤬", name: "cursing"},
+      {emoji: "🤯", name: "exploding head"},
+      {emoji: "😳", name: "flushed"},
+      {emoji: "🥵", name: "hot"},
+      {emoji: "🥶", name: "cold"},
+      {emoji: "😱", name: "screaming"},
+      {emoji: "😨", name: "fearful"},
+      {emoji: "😰", name: "anxious"},
+      {emoji: "😥", name: "disappointed but relieved"},
+      {emoji: "😓", name: "downcast"},
+      {emoji: "🤗", name: "hugging"},
+      {emoji: "🤔", name: "thinking"},
+      {emoji: "🤭", name: "hand over mouth"},
+      {emoji: "🤫", name: "shushing"},
+      {emoji: "🤥", name: "lying"},
+      {emoji: "😶", name: "speechless"},
+      {emoji: "😐", name: "neutral face"},
+      {emoji: "😑", name: "expressionless"},
+      {emoji: "😬", name: "grimacing"},
+      {emoji: "🙄", name: "rolling eyes"},
+      {emoji: "😯", name: "hushed"},
+      {emoji: "😦", name: "frowning"},
+      {emoji: "😧", name: "anguished"},
+      {emoji: "😮", name: "open mouth"},
+      {emoji: "😲", name: "astonished"},
+      {emoji: "🥱", name: "yawning"},
+      {emoji: "😴", name: "sleeping"},
+      {emoji: "🤤", name: "drooling"},
+      {emoji: "😪", name: "sleepy"},
+      {emoji: "😵", name: "dizzy"},
+      {emoji: "🤐", name: "zipper mouth"},
+      {emoji: "🥴", name: "woozy"},
+      {emoji: "🤢", name: "nauseated"},
+      {emoji: "🤮", name: "vomiting"},
+      {emoji: "🤧", name: "sneezing"},
+      {emoji: "😷", name: "mask"},
+      {emoji: "🤒", name: "thermometer face"},
+      {emoji: "🤕", name: "head bandage"},
+      {emoji: "🤑", name: "money mouth"},
+      {emoji: "🤠", name: "cowboy"},
+      {emoji: "😈", name: "smiling devil"},
+      {emoji: "👿", name: "angry devil"},
+      {emoji: "👹", name: "ogre"},
+      {emoji: "👺", name: "goblin"},
+      {emoji: "🤡", name: "clown"},
+      {emoji: "💩", name: "poop"},
+      {emoji: "👻", name: "ghost"},
+      {emoji: "💀", name: "skull"},
+      {emoji: "☠️", name: "skull & crossbones"},
+      {emoji: "👽", name: "alien"},
+      {emoji: "👾", name: "space invader"},
+      {emoji: "🤖", name: "robot"},
+      {emoji: "🎃", name: "jack-o-lantern"},
+      {emoji: "😺", name: "smiling cat"},
+      {emoji: "😸", name: "grinning cat"},
+      {emoji: "😹", name: "cat with tears of joy"},
+      {emoji: "😻", name: "heart eyes cat"},
+      {emoji: "😼", name: "wry cat"},
+      {emoji: "😽", name: "kissing cat"},
+      {emoji: "🙀", name: "weary cat"},
+      {emoji: "😿", name: "crying cat"},
+      {emoji: "😾", name: "pouting cat"}
+    ];
+    
+    let filteredEmojiList = [...fullEmojiList];
+    const pageSize = 30;
+    let currentEmojiIndex = 0;
+    
+    // Render function: appends the next batch of emojis from filteredEmojiList
+    function renderEmojiGrid() {
+      const endIndex = Math.min(currentEmojiIndex + pageSize, filteredEmojiList.length);
+      for (let i = currentEmojiIndex; i < endIndex; i++) {
+        const emojiObj = filteredEmojiList[i];
+        const span = document.createElement("span");
+        span.classList.add("emojiItem");
+        span.textContent = emojiObj.emoji;
+        span.title = emojiObj.name;
+        emojiGrid.appendChild(span);
+      }
+      currentEmojiIndex = endIndex;
+      // Show or hide the load more button based on remaining items
+      if (currentEmojiIndex >= filteredEmojiList.length) {
+        loadMoreButton.style.display = "none";
+      } else {
+        loadMoreButton.style.display = "block";
+      }
+    }
+    
+    function initEmojiGrid() {
+      currentEmojiIndex = 0;
+      emojiGrid.innerHTML = "";
+      renderEmojiGrid();
+    }
+    
+    // Filter emoji list based on search input
+    emojiSearch.addEventListener("input", () => {
+      const query = emojiSearch.value.trim().toLowerCase();
+      filteredEmojiList = fullEmojiList.filter(item =>
+        item.name.toLowerCase().includes(query)
+      );
+      initEmojiGrid();
+    });
+    
+    // Toggle emoji picker visibility when the button is clicked
+    emojiButton.addEventListener("click", function () {
+      if (emojiPicker.style.display === "none" || emojiPicker.style.display === "") {
+        emojiPicker.style.display = "block";
+        initEmojiGrid();
+      } else {
+        emojiPicker.style.display = "none";
+      }
+    });
+    
+    // Load More button click
+    loadMoreButton.addEventListener("click", () => {
+      renderEmojiGrid();
+    });
+    
+    // Insert emoji into textarea when clicked
+    emojiGrid.addEventListener("click", function (e) {
+      if (e.target.classList.contains("emojiItem")) {
+        const emoji = e.target.textContent;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        textarea.value = text.slice(0, start) + emoji + text.slice(end);
+        // Update cursor
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        textarea.dispatchEvent(new Event("input"));
       }
     });
   </script>
