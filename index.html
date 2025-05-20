@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BlueSky Intent Compose</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Global Styles */
+    body {
+      background: #f0f2f5; /* A light, neutral background */
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+  
+    /* Container styling to replicate BlueSky's clean, floating card */
+    #container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      max-width: 500px;
+      width: 100%;
+      padding: 24px 28px;
+    }
+  
+    /* Optional header – adjust or remove if the image shows no header */
+    h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 500;
+      font-size: 20px;
+      color: #333;
+    }
+  
+    /* Textarea styling that mimics BlueSky's compose field */
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 16px;
+      font-size: 16px;
+      border: 1px solid #eaeaea;
+      border-radius: 12px;
+      resize: none;
+      transition: border-color 0.2s ease;
+      outline: none;
+      background: #fff;
+    }
+    textarea:focus {
+      border-color: #1da1f2;
+      box-shadow: 0 0 0 1px #1da1f2;
+    }
+  
+    /* Character counter – it appears as a subtle hint in the bottom-right */
+    #charCount {
+      text-align: right;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #777;
+    }
+    .limit-exceeded {
+      color: #e0245e;
+    }
+  
+    /* Button group styling – buttons laid out side by side */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .button-group button {
+      flex: 1;
+      border: none;
+      padding: 14px 0;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+  
+    /* Compose Button: Bold blue background */
+    #composeButton {
+      background: #1da1f2;
+      color: #fff;
+    }
+    #composeButton:hover {
+      background: #0d93e3;
+      box-shadow: 0 2px 8px rgba(29, 161, 242, 0.4);
+    }
+  
+    /* Copy Link Button: Outline style to contrast the primary button */
+    #copyLinkButton {
+      background: #fff;
+      color: #1da1f2;
+      border: 1px solid #1da1f2;
+    }
+    #copyLinkButton:hover {
+      background: #e8f4ff;
+      box-shadow: 0 2px 8px rgba(29, 161, 242, 0.25);
+    }
+  
+    /* Confirmation message that appears when the link is copied */
+    #copyMessage {
+      text-align: center;
+      font-size: 14px;
+      color: #1da1f2;
+      margin-top: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2>Compose</h2>
+    <form id="composeForm">
+      <textarea id="postContent" placeholder="What's on your mind? (max 300 characters)"></textarea>
+      <div id="charCount">0/300</div>
+      <div class="button-group">
+        <button type="submit" id="composeButton">Post</button>
+        <button type="button" id="copyLinkButton">Copy Link</button>
+      </div>
+    </form>
+    <div id="copyMessage">Link copied!</div>
+  </div>
+  
+  <script>
+    // Live character counter update
+    const textarea = document.getElementById("postContent");
+    const charCount = document.getElementById("charCount");
+
+    textarea.addEventListener("input", () => {
+      const len = textarea.value.length;
+      charCount.textContent = `${len}/300`;
+      if (len > 300) {
+        charCount.classList.add("limit-exceeded");
+      } else {
+        charCount.classList.remove("limit-exceeded");
+      }
+    });
+
+    /**
+     * Creates a BlueSky intent link based on device type.
+     * Mobile devices use the deep link "bluesky://intent/compose"
+     * Desktop browsers use the web endpoint "https://bsky.app/intent/compose"
+     */
+    function getIntentLink() {
+      const content = textarea.value;
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      return isMobile
+        ? "bluesky://intent/compose?text=" + encodeURIComponent(content)
+        : "https://bsky.app/intent/compose?text=" + encodeURIComponent(content);
+    }
+
+    // Handle Compose action
+    document.getElementById("composeForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const content = textarea.value.trim();
+      if (!content) {
+        alert("Please enter some text to post.");
+        return;
+      }
+      if (content.length > 300) {
+        alert("Your post exceeds the 300 character limit.");
+        return;
+      }
+      const intentUrl = getIntentLink();
+      window.location.href = intentUrl;
+      
+      // Fallback alert if BlueSky isn't opened
+      setTimeout(() => {
+        alert("If the BlueSky app did not open, please ensure it is installed on your device.");
+      }, 1000);
+    });
+
+    // Copy Link button functionality
+    document.getElementById("copyLinkButton").addEventListener("click", function() {
+      const intentUrl = getIntentLink();
+      if (!navigator.clipboard) {
+        prompt("Copy the link:", intentUrl);
+      } else {
+        navigator.clipboard.writeText(intentUrl).then(() => {
+          const copyMsg = document.getElementById("copyMessage");
+          copyMsg.style.opacity = 1;
+          setTimeout(() => {
+            copyMsg.style.opacity = 0;
+          }, 2000);
+        }, () => {
+          alert("Failed to copy link. Please try again.");
+        });
+      }
+    });
+  </script>
+</body>
+</html>
