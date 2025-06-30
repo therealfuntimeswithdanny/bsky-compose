@@ -1,37 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BlueSky Intent Compose</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluesky Compose Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Import for Emoji Picker -->
   <script src="https://kit.fontawesome.com/0ca27f8db1.js" crossorigin="anonymous"></script>
-  <!-- Link to the CSS file -->
-  <link rel="stylesheet" href="style.css" />
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Style for the emoji picker popup */
+        #emojiPickerContainer {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 10px;
+            z-index: 100;
+            transform-origin: bottom right;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        }
+        #emojiPickerContainer.hidden {
+            transform: scale(0.9) translateY(10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
 </head>
-<body>
-  <div id="container">
-    <h2>Bluesky Composer</h2>
-    <form id="composeForm">
-      <textarea id="postContent" placeholder="What's on your mind?"></textarea>
-      <div id="charCount">0/300</div>
-      <div class="button-group">
-        <button type="submit" id="composeButton">Post</button>
-        <button type="button" id="copyLinkButton">Copy Link</button>
-        <button type="button" id="emojiButton">Emoji Picker</button>
-      </div>
-      <!-- Emoji Picker -->
-      <div id="emojiPicker">
-        <input type="text" id="emojiSearch" placeholder="Search emojis..." />
-        <div id="emojiGrid"></div>
-        <button type="button" id="loadMoreButton">Load More</button>
-      </div>
-    </form>
-    <div id="copyMessage">Link copied!</div>
-    <p>Developed by<i> <a href="https://bsky.app/profile/madebydanny.uk">@madebydanny.uk</a></i> | <i><a href="https://github.com/therealfuntimeswithdanny/bsky-compose">View on <i class="fa-brands fa-github"></i></a></i></p>
-  </div>
-  <!-- Link to the JavaScript file -->
-  <script src="script.js"></script>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 md:p-8 fade-in">
+        
+        <!-- Header Section -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">Bluesky Compose Helper</h1>
+        </div>
+        
+        <p class="mb-6 text-gray-600 dark:text-gray-400">
+            Write your post below. Add emojis, then compose on Bluesky or copy the link to share.
+        </p>
+
+        <!-- Text Area with Emoji Picker -->
+        <div class="relative">
+            <textarea id="postContent" 
+                      class="w-full h-48 p-4 pr-12 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-all duration-300 resize-none"
+                      placeholder="What's on your mind? You can include links like https://google.com..."></textarea>
+            
+            <button id="emojiButton" class="absolute top-3 right-3 text-gray-400 hover:text-blue-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+
+            <div id="charCounter" class="absolute bottom-3 left-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                0 / 300
+            </div>
+            
+            <!-- Emoji Picker Container -->
+            <div id="emojiPickerContainer" class="hidden">
+                <emoji-picker class="light" style="--indicator-color: #3b82f6; --num-columns: 8;"></emoji-picker>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex flex-col sm:flex-row sm:justify-center sm:space-x-4 space-y-3 sm:space-y-0">
+            <a id="composeButton" 
+               href="#"
+               target="_blank"
+               class="inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out text-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                Compose on Bluesky
+            </a>
+            <button id="copyButton"
+               class="inline-block w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                Copy Link
+            </button>
+        </div>
+        
+        <!-- Info Message Box -->
+        <div id="messageBox" class="mt-6 p-4 rounded-lg text-center hidden"></div>
+
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const postContent = document.getElementById('postContent');
+        const composeButton = document.getElementById('composeButton');
+        const copyButton = document.getElementById('copyButton');
+        const charCounter = document.getElementById('charCounter');
+        const messageBox = document.getElementById('messageBox');
+        const emojiButton = document.getElementById('emojiButton');
+        const emojiPickerContainer = document.getElementById('emojiPickerContainer');
+        const emojiPicker = document.querySelector('emoji-picker');
+
+        // --- Constants ---
+        const BLUESKY_BASE_URL = 'https://bsky.app/intent/compose';
+        const MAX_CHARS = 300;
+
+        /**
+         * Toggles the visibility of the emoji picker.
+         */
+        function toggleEmojiPicker() {
+            emojiPickerContainer.classList.toggle('hidden');
+        }
+
+        /**
+         * Updates the character counter and button states.
+         */
+        function updateUI() {
+            const currentLength = postContent.value.length;
+            charCounter.textContent = `${currentLength} / ${MAX_CHARS}`;
+
+            // Reset styles and messages
+            charCounter.classList.remove('text-red-500', 'font-bold', 'dark:text-red-400');
+            messageBox.classList.add('hidden');
+            messageBox.textContent = '';
+            
+            const isInvalid = currentLength === 0 || currentLength > MAX_CHARS;
+            
+            // Disable/Enable buttons
+            [composeButton, copyButton].forEach(button => {
+                if (isInvalid) {
+                    button.setAttribute('disabled', true);
+                    button.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    button.removeAttribute('disabled');
+                    button.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            if (currentLength > MAX_CHARS) {
+                charCounter.classList.add('text-red-500', 'font-bold', 'dark:text-red-400');
+                showMessage('Your post is over the 300 character limit for Bluesky.', 'error');
+            }
+        }
+        
+        /**
+         * Displays a message to the user.
+         * @param {string} text - The message to display.
+         * @param {string} type - 'error', 'info', or 'success'.
+         */
+        function showMessage(text, type = 'info') {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'dark:bg-red-900/50', 'dark:text-red-300', 'bg-green-100', 'text-green-700', 'dark:bg-green-900/50', 'dark:text-green-300');
+            
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900/50', 'dark:text-red-300');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-700', 'dark:bg-green-900/50', 'dark:text-green-300');
+            }
+            messageBox.classList.remove('hidden');
+        }
+
+        /**
+         * Generates the full Bluesky compose URL.
+         * @returns {string|null} The URL or null if content is invalid.
+         */
+        function getComposeUrl() {
+            const content = postContent.value;
+            if (content.length > 0 && content.length <= MAX_CHARS) {
+                const encodedText = encodeURIComponent(content);
+                return `${BLUESKY_BASE_URL}?text=${encodedText}`;
+            }
+            return null;
+        }
+
+        /**
+         * Updates the href of the compose button.
+         */
+        function updateComposeLink() {
+            const url = getComposeUrl();
+            composeButton.href = url || '#';
+        }
+
+        // --- Event Listeners ---
+        postContent.addEventListener('input', () => {
+            updateUI();
+            updateComposeLink();
+        });
+
+        composeButton.addEventListener('click', (event) => {
+            if (!getComposeUrl()) {
+                event.preventDefault();
+                updateUI();
+            }
+        });
+
+        copyButton.addEventListener('click', () => {
+            const url = getComposeUrl();
+            if (!url) return;
+
+            // Create a temporary textarea to copy from, as it preserves newlines.
+            const tempInput = document.createElement('textarea');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                showMessage('Link copied to clipboard!', 'success');
+                // Briefly change button text for feedback
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    messageBox.classList.add('hidden');
+                }, 2000);
+            } catch (err) {
+                showMessage('Failed to copy link. Please copy it manually.', 'error');
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(tempInput);
+        });
+
+        emojiButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent the document click listener from firing immediately
+            toggleEmojiPicker();
+        });
+
+        // Insert emoji into textarea at cursor position
+        emojiPicker.addEventListener('emoji-click', event => {
+            const { unicode } = event.detail;
+            const { selectionStart, selectionEnd } = postContent;
+            const text = postContent.value;
+            postContent.value = text.slice(0, selectionStart) + unicode + text.slice(selectionEnd);
+            postContent.focus();
+            postContent.selectionStart = postContent.selectionEnd = selectionStart + unicode.length;
+
+            // Manually trigger input event to update counter and links
+            postContent.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Optionally hide picker after selection
+            // toggleEmojiPicker(); 
+        });
+
+        // Close emoji picker when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!emojiPickerContainer.classList.contains('hidden') && !emojiPickerContainer.contains(event.target)) {
+                toggleEmojiPicker();
+            }
+        });
+
+        // --- Initial State Setup ---
+        window.addEventListener('load', () => {
+            updateUI();
+            updateComposeLink();
+        });
+    </script>
 </body>
 </html>
